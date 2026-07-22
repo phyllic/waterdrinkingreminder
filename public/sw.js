@@ -1,11 +1,11 @@
-const CACHE_NAME = 'hydropet-v1';
+const CACHE_NAME = 'hydropet-v2';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/src/main.jsx',
-  '/src/App.jsx',
-  '/src/index.css'
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './icon-192.png',
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -45,13 +45,12 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request).catch(() => {
-        return caches.match('/');
+        return caches.match('./');
       });
     })
   );
 });
 
-// Handle incoming Push or Reminder Notification Events
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
@@ -66,7 +65,7 @@ self.addEventListener('notificationclick', (event) => {
         }
         return client.focus();
       }
-      return clients.openWindow('/');
+      return clients.openWindow('./');
     })
   );
 });
