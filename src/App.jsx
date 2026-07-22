@@ -22,6 +22,7 @@ export default function App() {
   const [logs, setLogs] = useState([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [goalMl, setGoalMl] = useState(2500);
+  const [presets, setPresets] = useState([]);
   const [userProfile, setUserProfile] = useState({ weightKg: 65, activityLevel: 'moderate' });
   const [companion, setCompanion] = useState({ type: 'flora', name: 'Bloom', xp: 0, level: 1 });
   const [streakData, setStreakData] = useState({ currentStreak: 0, maxStreak: 0 });
@@ -43,6 +44,7 @@ export default function App() {
     const loadedLogs = storageService.getLogs();
     const todaySum = storageService.getTodayTotal();
     const loadedGoal = storageService.getGoal();
+    const loadedPresets = storageService.getPresets();
     const loadedProfile = storageService.getUserProfile();
     const loadedComp = storageService.getCompanion();
     const loadedStreak = storageService.getStreak();
@@ -52,6 +54,7 @@ export default function App() {
     setLogs(loadedLogs);
     setTodayTotal(todaySum);
     setGoalMl(loadedGoal);
+    setPresets(loadedPresets);
     setUserProfile(loadedProfile);
     setCompanion(loadedComp);
     setStreakData(loadedStreak);
@@ -103,8 +106,8 @@ export default function App() {
 
   const triggerConfetti = () => {
     confetti({
-      particleCount: 80,
-      spread: 70,
+      particleCount: 90,
+      spread: 75,
       origin: { y: 0.6 }
     });
   };
@@ -113,6 +116,17 @@ export default function App() {
     storageService.deleteLog(id);
     setLogs(storageService.getLogs());
     setTodayTotal(storageService.getTodayTotal());
+  };
+
+  const handleUpdatePresets = (newPresets) => {
+    storageService.savePresets(newPresets);
+    setPresets(newPresets);
+  };
+
+  const handleResetPresets = () => {
+    const res = storageService.resetPresets();
+    setPresets(res);
+    return res;
   };
 
   const handleSaveGoal = (newGoal, newProfile) => {
@@ -155,28 +169,29 @@ export default function App() {
   const hydrationPercent = Math.min(100, Math.round((todayTotal / goalMl) * 100));
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col justify-between max-w-md mx-auto relative overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+    /* MOBILE SCROLLING FIX: Allowed natural vertical scrolling with pb-32 bottom space */
+    <div className="min-h-screen bg-[#070a12] text-slate-100 flex flex-col justify-between max-w-md mx-auto relative selection:bg-cyan-500 selection:text-slate-950 pb-28">
       
       {/* Top Header Bar */}
-      <header className="p-4 flex items-center justify-between z-20">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-2xl bg-gradient-to-tr from-sky-500 to-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20">
+      <header className="p-4 flex items-center justify-between sticky top-0 z-30 bg-[#070a12]/90 backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-2xl bg-gradient-to-tr from-sky-500 to-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/30">
             <Droplet className="w-5 h-5 fill-slate-950" />
           </div>
           <div>
-            <h1 className="font-heading font-black text-lg text-white leading-tight">HydroPet</h1>
-            <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-widest">Hydration Companion</span>
+            <h1 className="font-heading font-black text-lg text-white leading-tight tracking-tight">HydroPet</h1>
+            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest block">Hydration Companion</span>
           </div>
         </div>
 
         {/* Action Header Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setTriggerInstallModal(true)}
             className="p-2 rounded-2xl glass-pill text-cyan-300 hover:text-white transition-colors flex items-center gap-1 border border-cyan-500/30"
             title="Install App"
           >
-            <Download className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <Download className="w-4 h-4 text-cyan-400 animate-bounce" />
             <span className="text-[10px] font-bold hidden sm:inline">Install</span>
           </button>
           <button
@@ -206,8 +221,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 px-4 py-2 z-10 overflow-y-auto">
+      {/* Main Content Area (Natural Mobile Scrolling) */}
+      <main className="flex-1 px-4 py-3 z-10">
         <PWAInstallBanner
           showModal={triggerInstallModal}
           onCloseModal={() => setTriggerInstallModal(false)}
@@ -226,8 +241,13 @@ export default function App() {
             {/* Liquid Wave Progress Card */}
             <LiquidWave currentMl={todayTotal} goalMl={goalMl} />
 
-            {/* Quick Add Intake Preset Buttons */}
-            <QuickAddPanel onAddWater={handleAddWater} />
+            {/* Quick Add Intake Preset Buttons (Customizable) */}
+            <QuickAddPanel
+              presets={presets}
+              onAddWater={handleAddWater}
+              onUpdatePresets={handleUpdatePresets}
+              onResetPresets={handleResetPresets}
+            />
           </div>
         )}
 
@@ -250,13 +270,13 @@ export default function App() {
       </main>
 
       {/* Bottom Floating Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 px-3 pb-4 pt-2 bg-gradient-to-t from-[#090d16] via-[#090d16]/90 to-transparent pointer-events-none">
-        <div className="glass-card rounded-3xl p-1.5 border border-sky-500/20 shadow-2xl flex items-center justify-around pointer-events-auto">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 px-3 pb-4 pt-2 bg-gradient-to-t from-[#070a12] via-[#070a12]/95 to-transparent pointer-events-none">
+        <div className="glass-card rounded-3xl p-1.5 border border-sky-500/30 shadow-2xl flex items-center justify-around pointer-events-auto">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'home'
-                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-extrabold shadow-lg shadow-cyan-500/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -268,7 +288,7 @@ export default function App() {
             onClick={() => setActiveTab('analytics')}
             className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'analytics'
-                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-extrabold shadow-lg shadow-cyan-500/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -280,7 +300,7 @@ export default function App() {
             onClick={() => setActiveTab('achievements')}
             className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'achievements'
-                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
+                ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-extrabold shadow-lg shadow-cyan-500/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >

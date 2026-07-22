@@ -5,17 +5,24 @@ const KEYS = {
   COMPANION: 'hydropet_companion',
   ACHIEVEMENTS: 'hydropet_achievements',
   REMINDERS: 'hydropet_reminders',
-  STREAK: 'hydropet_streak_data'
+  STREAK: 'hydropet_streak_data',
+  PRESETS: 'hydropet_custom_presets'
 };
 
+const DEFAULT_PRESETS = [
+  { id: 'p1', label: 'Small Cup', amount: 200, icon: 'Coffee', color: 'from-cyan-500/25 to-blue-600/25 border-cyan-400/50 text-cyan-300' },
+  { id: 'p2', label: 'Glass', amount: 350, icon: 'GlassWater', color: 'from-sky-500/25 to-teal-600/25 border-sky-400/50 text-sky-300' },
+  { id: 'p3', label: 'Bottle', amount: 500, icon: 'CupSoda', color: 'from-blue-500/25 to-indigo-600/25 border-blue-400/50 text-blue-300' },
+  { id: 'p4', label: 'Sports Flask', amount: 750, icon: 'Gauge', color: 'from-teal-500/25 to-emerald-600/25 border-teal-400/50 text-teal-300' },
+];
+
 export const storageService = {
-  // Get today's date string (YYYY-MM-DD)
   getTodayKey() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   },
 
-  // Hydration Logs
+  // Logs
   getLogs() {
     try {
       const data = localStorage.getItem(KEYS.LOGS);
@@ -55,7 +62,26 @@ export const storageService = {
     localStorage.setItem(KEYS.LOGS, JSON.stringify(logs));
   },
 
-  // Daily Goal (in ml)
+  // Customizable Presets
+  getPresets() {
+    try {
+      const data = localStorage.getItem(KEYS.PRESETS);
+      return data ? JSON.parse(data) : DEFAULT_PRESETS;
+    } catch {
+      return DEFAULT_PRESETS;
+    }
+  },
+
+  savePresets(presets) {
+    localStorage.setItem(KEYS.PRESETS, JSON.stringify(presets));
+  },
+
+  resetPresets() {
+    localStorage.setItem(KEYS.PRESETS, JSON.stringify(DEFAULT_PRESETS));
+    return DEFAULT_PRESETS;
+  },
+
+  // Goal
   getGoal() {
     try {
       const g = localStorage.getItem(KEYS.GOAL);
@@ -69,7 +95,7 @@ export const storageService = {
     localStorage.setItem(KEYS.GOAL, String(goalMl));
   },
 
-  // User Profile for Goal Calculator
+  // User Profile
   getUserProfile() {
     try {
       const data = localStorage.getItem(KEYS.USER_PROFILE);
@@ -83,7 +109,7 @@ export const storageService = {
     localStorage.setItem(KEYS.USER_PROFILE, JSON.stringify(profile));
   },
 
-  // Companion Data ('flora' or 'aqua')
+  // Companion
   getCompanion() {
     try {
       const data = localStorage.getItem(KEYS.COMPANION);
@@ -101,7 +127,6 @@ export const storageService = {
     const comp = this.getCompanion();
     comp.xp += amountXp;
     
-    // Level formula: level 1: 0-500, level 2: 500-1500, level 3: 1500-3000, level 4: 3000+
     let newLevel = 1;
     if (comp.xp >= 3000) newLevel = 4;
     else if (comp.xp >= 1500) newLevel = 3;
@@ -113,7 +138,7 @@ export const storageService = {
     return { companion: comp, leveledUp };
   },
 
-  // Streak Counter
+  // Streaks
   getStreak() {
     try {
       const data = localStorage.getItem(KEYS.STREAK);
