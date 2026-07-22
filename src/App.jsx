@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Droplet, BarChart2, Award, Settings, Bell, Calculator, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { Droplet, BarChart2, Award, Download, Bell, Calculator, Volume2, VolumeX } from 'lucide-react';
 
 import CompanionAvatar from './components/CompanionAvatar';
 import LiquidWave from './components/LiquidWave';
@@ -32,6 +32,7 @@ export default function App() {
   // Modals
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [triggerInstallModal, setTriggerInstallModal] = useState(false);
 
   // Initial Load
   useEffect(() => {
@@ -67,16 +68,10 @@ export default function App() {
 
   // Add Water Handler
   const handleAddWater = (amount, presetName = 'Custom') => {
-    // 1. Save Log
     storageService.addLog(amount, presetName);
-
-    // 2. Play Gulp Sound
     soundService.playGulpSound();
 
-    // 3. Add XP (1ml = 1 XP)
     const { companion: updatedComp, leveledUp } = storageService.addXP(amount);
-
-    // 4. Update Badges & Streaks
     storageService.unlockAchievement('first_sip');
     
     const newTotal = storageService.getTodayTotal();
@@ -85,7 +80,6 @@ export default function App() {
     setCompanion(updatedComp);
     setStreakData(storageService.getStreak());
 
-    // Goal Reached Check
     if (newTotal >= goalMl && todayTotal < goalMl) {
       storageService.unlockAchievement('goal_reached');
       triggerConfetti();
@@ -178,6 +172,14 @@ export default function App() {
         {/* Action Header Controls */}
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setTriggerInstallModal(true)}
+            className="p-2 rounded-2xl glass-pill text-cyan-300 hover:text-white transition-colors flex items-center gap-1 border border-cyan-500/30"
+            title="Install App"
+          >
+            <Download className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span className="text-[10px] font-bold hidden sm:inline">Install</span>
+          </button>
+          <button
             onClick={toggleSound}
             className="p-2 rounded-2xl glass-pill text-slate-300 hover:text-white transition-colors"
             title="Toggle Sound"
@@ -206,7 +208,10 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 px-4 py-2 z-10 overflow-y-auto">
-        <PWAInstallBanner />
+        <PWAInstallBanner
+          showModal={triggerInstallModal}
+          onCloseModal={() => setTriggerInstallModal(false)}
+        />
 
         {activeTab === 'home' && (
           <div className="space-y-4 animate-fadeIn">
@@ -245,42 +250,51 @@ export default function App() {
       </main>
 
       {/* Bottom Floating Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 px-4 pb-4 pt-2 bg-gradient-to-t from-[#090d16] via-[#090d16]/90 to-transparent pointer-events-none">
-        <div className="glass-card rounded-3xl p-2 border border-sky-500/20 shadow-2xl flex items-center justify-around pointer-events-auto">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 px-3 pb-4 pt-2 bg-gradient-to-t from-[#090d16] via-[#090d16]/90 to-transparent pointer-events-none">
+        <div className="glass-card rounded-3xl p-1.5 border border-sky-500/20 shadow-2xl flex items-center justify-around pointer-events-auto">
           <button
             onClick={() => setActiveTab('home')}
-            className={`flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all ${
+            className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'home'
                 ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Droplet className="w-5 h-5" />
+            <Droplet className="w-4 h-4" />
             <span className="text-[10px] font-heading tracking-wide">Hydrate</span>
           </button>
 
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all ${
+            className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'analytics'
                 ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <BarChart2 className="w-5 h-5" />
+            <BarChart2 className="w-4 h-4" />
             <span className="text-[10px] font-heading tracking-wide">Stats</span>
           </button>
 
           <button
             onClick={() => setActiveTab('achievements')}
-            className={`flex-1 py-2.5 rounded-2xl flex flex-col items-center gap-1 transition-all ${
+            className={`flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all ${
               activeTab === 'achievements'
                 ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Award className="w-5 h-5" />
+            <Award className="w-4 h-4" />
             <span className="text-[10px] font-heading tracking-wide">Badges</span>
+          </button>
+
+          {/* Dedicated Install Button in Bottom Navigation Bar */}
+          <button
+            onClick={() => setTriggerInstallModal(true)}
+            className="flex-1 py-2 rounded-2xl flex flex-col items-center gap-0.5 transition-all text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+          >
+            <Download className="w-4 h-4 text-cyan-400 animate-bounce" />
+            <span className="text-[10px] font-heading font-bold tracking-wide">Install</span>
           </button>
         </div>
       </nav>
